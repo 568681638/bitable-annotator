@@ -415,18 +415,25 @@ function detectUrlType(url: string): 'video' | 'image' | 'audio' | 'link' {
   return 'link';
 }
 
+// ── 所有外部URL走同源代理，绕过Chrome PNA/CORS限制 ──
+function proxyUrl(url: string): string {
+  if (/^https?:\/\//.test(url)) return 'api-proxy/' + encodeURIComponent(url);
+  return url;
+}
+
 function renderUrlPreview(url: string, type: string): string {
-  const fallbackLink = `<a href="${url}" target="_blank" rel="noopener noreferrer">${esc(url)}</a>`;
+  const src = proxyUrl(url);
+  const fallbackLink = `<a href="${src}" target="_blank" rel="noopener noreferrer">${esc(src)}</a>`;
   switch (type) {
-    case 'video': return `<video controls style="max-width:100%;max-height:300px;"><source src="${url}" type="video/mp4">${fallbackLink}</video>`;
+    case 'video': return `<video controls style="max-width:100%;max-height:300px;"><source src="${src}" type="video/mp4">${fallbackLink}</video>`;
     case 'image': {
-      const src = resolveImageUrl(url);
-      return `<img src="${src}" alt="预览" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
+      const imgSrc = resolveImageUrl(src);
+      return `<img src="${imgSrc}" alt="预览" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
     }
-    case 'audio': return `<audio controls style="max-width:100%;"><source src="${url}">${fallbackLink}</audio>`;
+    case 'audio': return `<audio controls style="max-width:100%;"><source src="${src}">${fallbackLink}</audio>`;
     default: {
-      const src = resolveImageUrl(url);
-      return `<img src="${src}" alt="预览" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
+      const imgSrc = resolveImageUrl(src);
+      return `<img src="${imgSrc}" alt="预览" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
     }
   }
 }
