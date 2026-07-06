@@ -56,6 +56,21 @@ const recordIndex = document.getElementById('recordIndex') as HTMLSpanElement;
 const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
 const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
 const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
+const locateBtn = document.getElementById('locateBtn') as HTMLButtonElement;
+
+// ── 定位当前记录 ──────────────────────────────────
+locateBtn.addEventListener('click', async () => {
+  if (records.length === 0 || currentIndex < 0) return;
+  const record = records[currentIndex];
+  try {
+    await (bitable as any).ui.showRecordDetailDialog({
+      tableId: currentTableId,
+      recordId: record.recordId,
+    });
+  } catch (e) {
+    console.error('定位记录失败', e);
+  }
+});
 
 // ── 撤销修改 ──────────────────────────────────────
 undoBtn.addEventListener('click', () => {
@@ -257,6 +272,7 @@ function renderError(msg: string) {
 function updateNavButtons() {
   prevBtn.disabled = currentIndex <= 0;
   nextBtn.disabled = currentIndex >= records.length - 1;
+  locateBtn.disabled = records.length === 0;
   recordIndex.textContent = `${currentIndex + 1} / ${records.length}`;
 }
 
