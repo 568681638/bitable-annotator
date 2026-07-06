@@ -33,6 +33,7 @@ const FType: Record<string, number> = {
 const READONLY_TYPES = new Set([
   FType.URL, FType.FORMULA, FType.SINGLE_LINK, FType.DUPLEX_LINK,
   FType.ATTACHMENT, FType.AUTO_NUMBER, FType.LOCATION, FType.OBJECT,
+  FType.USER, FType.GROUP_CHAT,
 ]);
 
 // ── 全局状态 ──────────────────────────────────────
@@ -53,6 +54,26 @@ const prevBtn = document.getElementById('prevBtn') as HTMLButtonElement;
 const nextBtn = document.getElementById('nextBtn') as HTMLButtonElement;
 const recordIndex = document.getElementById('recordIndex') as HTMLSpanElement;
 const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
+const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
+
+// ── 刷新记录列表 ──────────────────────────────────
+async function refreshRecords() {
+  if (!currentTable || isSaving) return;
+  try {
+    await loadRecords();
+    if (currentIndex >= records.length) currentIndex = Math.max(0, records.length - 1);
+    updateNavButtons();
+    if (records.length > 0) {
+      renderCurrentRecord();
+    } else {
+      renderEmptyState('当前视图没有记录');
+    }
+  } catch (e) {
+    console.error('刷新失败', e);
+  }
+}
+
+refreshBtn.addEventListener('click', refreshRecords);
 
 // ── 只读判断 ──────────────────────────────────────
 function isFieldReadonly(field: FieldMeta, rawValue: any): boolean {
@@ -251,6 +272,8 @@ function renderFieldControl(field: FieldMeta, rawValue: any): string {
     case FType.LOCATION: return renderLocationField(field, rawValue);
     case FType.AUTO_NUMBER: return renderReadonlyField(field, rawValue);
     case FType.ATTACHMENT: return renderReadonlyField(field, rawValue);
+    case FType.USER:
+    case FType.GROUP_CHAT: return renderUserField(field, rawValue);
     default: return renderTextField(field, rawValue);
   }
 }
@@ -371,6 +394,22 @@ function renderLocationField(field: FieldMeta, rawValue: any): string {
     addr = rawValue.fullAddress || rawValue.address || rawValue.name || JSON.stringify(rawValue);
   } else if (typeof rawValue === 'string') addr = rawValue;
   return `<input type="text" data-field-id="${field.id}" value="${esc(addr)}" readonly />`;
+}
+
+function renderUserField(field: FieldMeta, rawValue: any): string {
+  // rawValue 可能是 [{id:"xxx", name:"张三"}] 或 {id:"xxx", name:"张三"}
+  const names: string[] = [];
+  if (Array.isArray(rawValue)) {
+    for (const item of rawValue) {
+      if (item && item.name) names.push(item.name);
+    }
+  } else if (rawValue && typeof rawValue === 'object' && rawValue.name) {
+    names.push(rawValue.name);
+  } else if (rawValue) {
+    names.push(String(rawValue));
+  }
+  const text = names.join('、') || '—';
+  return `<input type="text" data-field-id="${field.id}" value="${esc(text)}" readonly />`;
 }
 
 function renderReadonlyField(field: FieldMeta, rawValue: any): string {
