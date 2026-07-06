@@ -56,10 +56,25 @@ const recordIndex = document.getElementById('recordIndex') as HTMLSpanElement;
 const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
 const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
 
-// ── 刷新记录列表 ──────────────────────────────────
+// ── 刷新记录列表（同步字段顺序/可见性 + 记录列表）──
 async function refreshRecords() {
   if (!currentTable || isSaving) return;
   try {
+    // 重新获取视图的可见字段顺序
+    const allFields: FieldMeta[] = await currentTable.getFieldMetaList();
+    const fieldMap = new Map<string, FieldMeta>();
+    allFields.forEach(f => fieldMap.set(f.id, f));
+
+    const visibleIds: string[] = await currentView.getVisibleFieldIdList();
+    const newFields = visibleIds
+      .map(id => fieldMap.get(id))
+      .filter((f): f is FieldMeta => !!f);
+
+    if (newFields.length > 0) {
+      // 只在新字段列表有效时替换，避免视图配置拉取失败清空字段
+      fields = newFields;
+    }
+
     await loadRecords();
     if (currentIndex >= records.length) currentIndex = Math.max(0, records.length - 1);
     updateNavButtons();
