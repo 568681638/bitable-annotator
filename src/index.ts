@@ -52,7 +52,8 @@ let currentViewId = '';
 const recordContent = document.getElementById('recordContent')!;
 const prevBtn = document.getElementById('prevBtn') as HTMLButtonElement;
 const nextBtn = document.getElementById('nextBtn') as HTMLButtonElement;
-const recordIndex = document.getElementById('recordIndex') as HTMLSpanElement;
+const recordIndex = document.getElementById('recordJump') as HTMLInputElement;
+const totalCount = document.getElementById('totalCount') as HTMLSpanElement;
 const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
 const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
 const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
@@ -272,7 +273,10 @@ function renderError(msg: string) {
 function updateNavButtons() {
   prevBtn.disabled = currentIndex <= 0;
   nextBtn.disabled = currentIndex >= records.length - 1;
-  recordIndex.textContent = `${currentIndex + 1} / ${records.length}`;
+  recordIndex.disabled = records.length === 0;
+  recordIndex.max = String(records.length);
+  recordIndex.value = records.length > 0 ? String(currentIndex + 1) : '0';
+  totalCount.textContent = `/ ${records.length}`;
 }
 
 function renderCurrentRecord() {
@@ -616,6 +620,22 @@ prevBtn.addEventListener('click', async () => {
 });
 nextBtn.addEventListener('click', async () => {
   if (currentIndex < records.length - 1) { await saveIfModified(); currentIndex++; modifiedFields = {}; updateNavButtons(); renderCurrentRecord(); locateRecord(records[currentIndex]); }
+});
+recordIndex.addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    const target = parseInt(recordIndex.value);
+    if (!isNaN(target) && target >= 1 && target <= records.length && target !== currentIndex + 1) {
+      await saveIfModified();
+      currentIndex = target - 1;
+      modifiedFields = {};
+      updateNavButtons();
+      renderCurrentRecord();
+      locateRecord(records[currentIndex]);
+    } else {
+      // 无效输入恢复原值
+      recordIndex.value = String(currentIndex + 1);
+    }
+  }
 });
 saveBtn.addEventListener('click', async () => { await saveIfModified(); });
 
