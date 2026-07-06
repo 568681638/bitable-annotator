@@ -56,12 +56,10 @@ const recordIndex = document.getElementById('recordIndex') as HTMLSpanElement;
 const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
 const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
 const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
-const locateBtn = document.getElementById('locateBtn') as HTMLButtonElement;
 
-// ── 定位当前记录 ──────────────────────────────────
-locateBtn.addEventListener('click', async () => {
-  if (records.length === 0 || currentIndex < 0 || fields.length === 0) return;
-  const record = records[currentIndex];
+// ── 切换记录时自动在表格中定位高亮 ──────────────────
+async function locateRecord(record: RecordData) {
+  if (fields.length === 0) return;
   try {
     await (bitable as any).ui.showFieldValueEditor({
       tableId: currentTableId,
@@ -69,10 +67,10 @@ locateBtn.addEventListener('click', async () => {
       recordId: record.recordId,
       fieldId: fields[0].id,
     });
-  } catch (e) {
-    console.error('定位记录失败', e);
+  } catch {
+    // 忽略定位失败
   }
-});
+}
 
 // ── 撤销修改 ──────────────────────────────────────
 undoBtn.addEventListener('click', () => {
@@ -274,7 +272,6 @@ function renderError(msg: string) {
 function updateNavButtons() {
   prevBtn.disabled = currentIndex <= 0;
   nextBtn.disabled = currentIndex >= records.length - 1;
-  locateBtn.disabled = records.length === 0;
   recordIndex.textContent = `${currentIndex + 1} / ${records.length}`;
 }
 
@@ -615,10 +612,10 @@ function updateSaveBtn() {
 
 // ── 导航 ──────────────────────────────────────────
 prevBtn.addEventListener('click', async () => {
-  if (currentIndex > 0) { await saveIfModified(); currentIndex--; modifiedFields = {}; updateNavButtons(); renderCurrentRecord(); }
+  if (currentIndex > 0) { await saveIfModified(); currentIndex--; modifiedFields = {}; updateNavButtons(); renderCurrentRecord(); locateRecord(records[currentIndex]); }
 });
 nextBtn.addEventListener('click', async () => {
-  if (currentIndex < records.length - 1) { await saveIfModified(); currentIndex++; modifiedFields = {}; updateNavButtons(); renderCurrentRecord(); }
+  if (currentIndex < records.length - 1) { await saveIfModified(); currentIndex++; modifiedFields = {}; updateNavButtons(); renderCurrentRecord(); locateRecord(records[currentIndex]); }
 });
 saveBtn.addEventListener('click', async () => { await saveIfModified(); });
 
