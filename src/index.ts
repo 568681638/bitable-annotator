@@ -60,12 +60,14 @@ const locateBtn = document.getElementById('locateBtn') as HTMLButtonElement;
 
 // ── 定位当前记录 ──────────────────────────────────
 locateBtn.addEventListener('click', async () => {
-  if (records.length === 0 || currentIndex < 0) return;
+  if (records.length === 0 || currentIndex < 0 || fields.length === 0) return;
   const record = records[currentIndex];
   try {
-    await (bitable as any).ui.showRecordDetailDialog({
+    await (bitable as any).ui.showFieldValueEditor({
       tableId: currentTableId,
+      viewId: currentViewId,
       recordId: record.recordId,
+      fieldId: fields[0].id,
     });
   } catch (e) {
     console.error('定位记录失败', e);
