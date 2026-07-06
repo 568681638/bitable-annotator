@@ -54,7 +54,17 @@ const prevBtn = document.getElementById('prevBtn') as HTMLButtonElement;
 const nextBtn = document.getElementById('nextBtn') as HTMLButtonElement;
 const recordIndex = document.getElementById('recordIndex') as HTMLSpanElement;
 const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
+const undoBtn = document.getElementById('undoBtn') as HTMLButtonElement;
 const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
+
+// ── 撤销修改 ──────────────────────────────────────
+undoBtn.addEventListener('click', () => {
+  if (Object.keys(modifiedFields).length === 0) return;
+  modifiedFields = {};
+  renderCurrentRecord();
+  updateSaveBtn();
+  undoBtn.disabled = true;
+});
 
 // ── 刷新记录列表（同步字段顺序/可见性 + 记录列表）──
 async function refreshRecords() {
@@ -580,7 +590,9 @@ function attachFieldListeners() {
 }
 
 function updateSaveBtn() {
-  saveBtn.disabled = Object.keys(modifiedFields).length === 0 || isSaving;
+  const hasChanges = Object.keys(modifiedFields).length > 0;
+  saveBtn.disabled = !hasChanges || isSaving;
+  undoBtn.disabled = !hasChanges;
 }
 
 // ── 导航 ──────────────────────────────────────────

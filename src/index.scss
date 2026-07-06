@@ -234,6 +234,28 @@ body {
   background: #666;
 }
 
+.undo-btn {
+  padding: 8px 24px;
+  background: transparent;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 8px;
+  transition: all 0.2s;
+}
+
+.undo-btn:hover:not(:disabled) {
+  border-color: #4f7cff;
+  color: #4f7cff;
+}
+
+.undo-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .empty-state {
   text-align: center;
   padding: 60px 20px;
