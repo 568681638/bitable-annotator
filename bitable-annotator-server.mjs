@@ -64,12 +64,25 @@ function proxyRequest(targetUrl, req, res) {
   req.pipe(proxyReq);
 }
 
+// 代理白名单（防止被当作开放代理滥用）
+const PROXY_DOMAINS = [
+  'oss-cn-shenzhen-internal.aliyuncs.com',
+];
+
+function isAllowedProxy(targetUrl) {
+  return PROXY_DOMAINS.some(d => targetUrl.includes(d));
+}
+
 const server = createServer((req, res) => {
-  // 代理所有外部 URL: /api-proxy/https%3A%2F%2Fexample.com%2Fpath
+  // 代理内网 OSS URL: /api-proxy/https%3A%2F%2F...oss-cn-shenzhen-internal...%2F...
   if (req.url.startsWith('/api-proxy/')) {
     const encoded = req.url.slice('/api-proxy/'.length);
     try {
       const targetUrl = decodeURIComponent(encoded);
+      if (!isAllowedProxy(targetUrl)) {
+        res.writeHead(403);
+        return res.end('Proxy not allowed for this domain');
+      }
       return proxyRequest(targetUrl, req, res);
     } catch {
       res.writeHead(400);

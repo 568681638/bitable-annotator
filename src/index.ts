@@ -82,25 +82,38 @@ undoBtn.addEventListener('click', () => {
   undoBtn.disabled = true;
 });
 
-// ── 刷新记录列表（同步字段顺序/可见性 + 记录列表）──
+// ── 刷新记录列表（同步字段列表/顺序/可见性/选项 + 记录列表）──
 async function refreshRecords() {
   if (!currentTable || isSaving) return;
   try {
-    // 重新获取视图的可见字段顺序
+    // 1. 重新获取字段元数据（覆盖新增/删除/重命名的字段）
     const allFields: FieldMeta[] = await currentTable.getFieldMetaList();
     const fieldMap = new Map<string, FieldMeta>();
     allFields.forEach(f => fieldMap.set(f.id, f));
 
+    // 2. 重新获取视图可见字段顺序
     const visibleIds: string[] = await currentView.getVisibleFieldIdList();
     const newFields = visibleIds
       .map(id => fieldMap.get(id))
       .filter((f): f is FieldMeta => !!f);
 
     if (newFields.length > 0) {
-      // 只在新字段列表有效时替换，避免视图配置拉取失败清空字段
       fields = newFields;
     }
 
+    // 3. 刷新选择字段的选项（覆盖选项列表变更）
+    for (const field of fields) {
+      if (field.type === FType.SINGLE_SELECT || field.type === FType.MULTI_SELECT) {
+        try {
+          const ff = await currentTable.getFieldById(field.id);
+          if (ff && typeof ff.getOptions === 'function') {
+            fieldOptionsCache[field.id] = (await ff.getOptions()) as FieldOption[];
+          }
+        } catch { /* ignore */ }
+      }
+    }
+
+    // 4. 刷新记录列表
     await loadRecords();
     if (currentIndex >= records.length) currentIndex = Math.max(0, records.length - 1);
     updateNavButtons();
@@ -499,8 +512,17 @@ function detectUrlType(url: string): 'video' | 'image' | 'audio' | 'link' {
 }
 
 // ── 所有外部URL走同源代理，绕过Chrome PNA/CORS限制 ──
+// ── 代理白名单（只代理内网 OSS 域名）───────────────
+const PROXY_DOMAINS = [
+  'oss-cn-shenzhen-internal.aliyuncs.com',
+];
+
+function needsProxy(url: string): boolean {
+  return PROXY_DOMAINS.some(d => url.includes(d));
+}
+
 function proxyUrl(url: string): string {
-  if (/^https?:\/\//.test(url)) return 'api-proxy/' + encodeURIComponent(url);
+  if (/^https?:\/\//.test(url) && needsProxy(url)) return 'api-proxy/' + encodeURIComponent(url);
   return url;
 }
 
