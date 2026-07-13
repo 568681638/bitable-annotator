@@ -495,7 +495,7 @@ function resolveImageUrl(url: string): string {
   return url;
 }
 
-function detectUrlType(url: string): 'video' | 'image' | 'audio' | 'link' {
+function detectUrlType(url: string): 'video' | 'image' | 'audio' | 'webpage' {
   const lo = url.toLowerCase();
   // 视频
   if (['.mp4','.webm','.ogg','.avi','.mov','.mkv'].some(e => lo.includes(e)) ||
@@ -508,7 +508,7 @@ function detectUrlType(url: string): 'video' | 'image' | 'audio' | 'link' {
        'lorempixel.com','dummyimage.com','giphy.com',
        'aliyuncs.com','oss-'].some(e => lo.includes(e))) return 'image';
   if (/\/img\/|\/image\/|\/photo\/|\/pic\/|mediaurl=/.test(lo)) return 'image';
-  return 'link';
+  return 'webpage';
 }
 
 // ── 所有外部URL走同源代理，绕过Chrome PNA/CORS限制 ──
@@ -536,10 +536,8 @@ function renderUrlPreview(url: string, type: string): string {
       return `<img src="${imgSrc}" alt="预览" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
     }
     case 'audio': return `<audio controls style="max-width:100%;"><source src="${src}">${fallbackLink}</audio>`;
-    default: {
-      const imgSrc = resolveImageUrl(src);
-      return `<img src="${imgSrc}" alt="预览" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
-    }
+    case 'webpage': return `<iframe src="${src}" style="width:100%;aspect-ratio:16/9;border:1px solid #ddd;border-radius:4px;" sandbox="allow-scripts allow-same-origin allow-popups">${fallbackLink}</iframe>`;
+    default: return fallbackLink;
   }
 }
 
