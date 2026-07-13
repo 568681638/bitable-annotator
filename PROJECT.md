@@ -52,7 +52,7 @@ node bitable-annotator-server.mjs &    # 端口 6869
 
 ### 5. 服务端代理（解决 Chrome PNA 限制）
 - 代理白名单：只有匹配 `oss-cn-shenzhen-internal.aliyuncs.com` 的内网 OSS URL 才走代理，其他 URL 直连
-- 浏览器请求 `/api-proxy/https%3A%2F%2F...` → `bitable-annotator-server.mjs` 代理 → 真实 OSS URL
+- 浏览器请求 `/api-proxy/https%3A%2F%2F...` → `server.mjs` 代理 → 真实 OSS URL
 - 服务端同样有白名单校验，防止被当作开放代理滥用
 - 支持 Range 请求（视频流式加载、拖进度条）
 
@@ -68,7 +68,7 @@ node bitable-annotator-server.mjs &    # 端口 6869
 | 移除 `normalizeOssUrl` | 内网 OSS 地址无对应公网地址，转公网会导致 404 |
 | 代理路径用 `api-proxy/`（相对路径） | 避免与 k8s 的 `/proxy/6869/` 路由冲突 |
 | 代理加白名单，只代理内网 OSS 域名 | 非 OSS 域名不需要走代理；也防止服务端被当作开放代理 |
-| 服务文件名改为 `bitable-annotator-server.mjs` | 避免 pkill 误杀其他 Node 服务 |
+| 用 PM2 托管服务进程 | 容器环境不支持 systemd，PM2 提供崩溃重启和开机自启 |
 | 只用 `RecordAdd` + `RecordDelete` 事件 → 最终改为手动刷新 | 用户反馈自动刷新影响体验 |
 
 ---

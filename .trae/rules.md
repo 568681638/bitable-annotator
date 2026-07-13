@@ -14,10 +14,11 @@
 
 ```
 src/index.ts       - 插件主逻辑
+src/index.scss     - 样式
 index.html         - 插件 HTML 模板
-index.scss          - 样式
-bitable-annotator-server.mjs  - Node.js 后端代理服务器
+server.mjs          - Node.js 后端代理服务器
 bitable-annotator.service     - systemd 服务配置
+deamon.sh           - PM2 启动脚本
 PROJECT.md          - 项目文档
 dist/              - 编译产物
 ```
