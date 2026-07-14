@@ -542,10 +542,10 @@ function renderUrlPreview(url: string, type: string): string {
   const src = proxyUrl(url);
   const fallbackLink = `<a href="${src}" target="_blank" rel="noopener noreferrer">${esc(src)}</a>`;
   switch (type) {
-    case 'video': return `<video controls style="max-width:100%;max-height:300px;"><source src="${src}" type="video/mp4">${fallbackLink}</video>`;
+    case 'video': return `<video controls style="width:100%;"><source src="${src}" type="video/mp4">${fallbackLink}</video>`;
     case 'image': {
       const imgSrc = resolveImageUrl(src);
-      return `<img src="${imgSrc}" alt="预览" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
+      return `<img src="${imgSrc}" alt="预览" style="width:100%;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
     }
     case 'audio': return `<audio controls style="max-width:100%;"><source src="${src}">${fallbackLink}</audio>`;
     case 'webpage': {
@@ -565,6 +565,13 @@ function esc(value: string): string {
 // ── 事件监听（仅 .field-input class 的元素可编辑） ──
 function attachFieldListeners() {
   const textSegmentFieldIds = new Set<string>();
+
+  // 阻止 number 输入框聚焦时滚轮改值，但不影响页面滚动
+   recordContent.querySelectorAll('input[type="number"].field-input').forEach(el => {
+     el.addEventListener('wheel', (e: Event) => {
+       if (document.activeElement === el) e.preventDefault();
+     }, { passive: false });
+   });
 
   recordContent.querySelectorAll('.field-row').forEach(row => {
     const fid = (row as HTMLElement).dataset.fieldId;
