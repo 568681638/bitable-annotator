@@ -69,6 +69,7 @@ node bitable-annotator-server.mjs &    # 端口 6869
 | 移除 `normalizeOssUrl` | 内网 OSS 地址无对应公网地址，转公网会导致 404 |
 | 代理路径用 `api-proxy/`（相对路径） | 避免与 k8s 的 `/proxy/6869/` 路由冲突 |
 | 代理加白名单，只代理内网 OSS 域名 | 非 OSS 域名不需要走代理；也防止服务端被当作开放代理 |
+| TTE 等会破框的域名不渲染 iframe | 只展示可点击链接，避免无限重刷 |
 | 用 PM2 托管服务进程 | 容器环境不支持 systemd，PM2 提供崩溃重启和开机自启 |
 | 只用 `RecordAdd` + `RecordDelete` 事件 → 最终改为手动刷新 | 用户反馈自动刷新影响体验 |
 

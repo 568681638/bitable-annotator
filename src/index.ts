@@ -526,6 +526,18 @@ function proxyUrl(url: string): string {
   return url;
 }
 
+// ── 会执行破框代码的域名（不渲染 iframe，只展示链接） ──
+const FRAMEBUSTER_DOMAINS = [
+  'tte.zytintra.com',
+];
+
+function isFramebuster(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname;
+    return FRAMEBUSTER_DOMAINS.some(d => hostname.includes(d));
+  } catch { return false; }
+}
+
 function renderUrlPreview(url: string, type: string): string {
   const src = proxyUrl(url);
   const fallbackLink = `<a href="${src}" target="_blank" rel="noopener noreferrer">${esc(src)}</a>`;
@@ -536,7 +548,10 @@ function renderUrlPreview(url: string, type: string): string {
       return `<img src="${imgSrc}" alt="预览" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.style.display='none';this.nextElementSibling.style.display=''" /><span style="display:none">${fallbackLink}</span>`;
     }
     case 'audio': return `<audio controls style="max-width:100%;"><source src="${src}">${fallbackLink}</audio>`;
-    case 'webpage': return `<iframe src="${src}" style="width:100%;aspect-ratio:16/9;border:1px solid #ddd;border-radius:4px;" sandbox="allow-scripts allow-same-origin allow-popups">${fallbackLink}</iframe>`;
+    case 'webpage': {
+      if (isFramebuster(url)) return fallbackLink;
+      return `<iframe src="${src}" style="width:100%;aspect-ratio:16/9;border:1px solid #ddd;border-radius:4px;" sandbox="allow-scripts allow-same-origin allow-popups">${fallbackLink}</iframe>`;
+    }
     default: return fallbackLink;
   }
 }
